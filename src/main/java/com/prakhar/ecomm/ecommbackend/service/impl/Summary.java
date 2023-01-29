@@ -31,3 +31,8 @@ public class Summary {
        n*/
 
 }
+
+//how to check if user email is unique or not
+//1. User controller will check implement duplicate email method
+//2. User service will check if the email is unique by getting email ID from user repository
+

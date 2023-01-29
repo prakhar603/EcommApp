@@ -4,6 +4,8 @@ import com.prakhar.ecomm.ecommbackend.entity.Users;
 
 public interface IUserService {
     Users createUser(Users user);
+
+    String login(String username, String password) throws Exception;
 }
 
 /*

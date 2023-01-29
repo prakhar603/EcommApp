@@ -2,10 +2,7 @@ package com.prakhar.ecomm.ecommbackend.entity;
 
 import lombok.*;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 @Data
 @NoArgsConstructor
@@ -15,14 +12,19 @@ public class Users {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
-    @NonNull
+
+    @Column(nullable = false, unique = true)
     private String email;
-    @NonNull
+
+    @Column(name = "first_name", nullable = false)
     private String firstName;
-    @NonNull
+
+    @Column(nullable = false)
     private String password;
-    @NonNull
+
+    @Column(nullable = false)
     private Integer age;
-    @NonNull
+
+    @Column(nullable = false)
     private String gender;
 }
