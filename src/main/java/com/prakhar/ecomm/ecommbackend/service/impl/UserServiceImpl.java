@@ -17,6 +17,9 @@ public class UserServiceImpl implements IUserService {
     @Autowired
     UserRepository userRepository;
 
+    @Autowired
+    JwtUtils jwtUtils;
+
     @Override
     public Users createUser(Users user){
         this.isEmailUnique(user.getEmail());
@@ -25,7 +28,7 @@ public class UserServiceImpl implements IUserService {
     }
 
     private String encrypt(String str){
-        return Arrays.toString(Base64.getEncoder().encode(str.getBytes(StandardCharsets.UTF_8)));
+        return new String(Base64.getEncoder().encode(str.getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
     }
 
     public void isEmailUnique(String email) {
@@ -38,9 +41,11 @@ public class UserServiceImpl implements IUserService {
     @Override
     public String login(String username, String password) throws Exception {
         Users user = this.userRepository.getUserByEmail(username);
-        String passwordStored = new String(Base64.getDecoder().decode(user.getPassword().getBytes(StandardCharsets.UTF_8)));
-        if (passwordStored.equals(password)){
-            return JwtUtils.generateJwtToken(username);
+        System.out.println("password stored: "+user.getPassword());
+        String passwordEncrypted = this.encrypt(password);
+        System.out.println("password encrypted: "+passwordEncrypted);
+        if (passwordEncrypted.equals(user.getPassword())){
+            return jwtUtils.generateJwtToken(username);
         }
         throw new Exception("Username and password do not match");
     }
