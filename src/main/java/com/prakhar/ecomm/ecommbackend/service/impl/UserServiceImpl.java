@@ -32,7 +32,7 @@ public class UserServiceImpl implements IUserService {
     }
 
     public void isEmailUnique(String email) {
-        Users userByEmail = userRepository.getUserByEmail(email) ;
+        Users userByEmail = userRepository.findByEmail(email) ;
         if (userByEmail!=null){
             throw new RuntimeException("email id not unique.");
         }
@@ -40,7 +40,7 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     public String login(String username, String password) throws Exception {
-        Users user = this.userRepository.getUserByEmail(username);
+        Users user = this.userRepository.findByEmail(username);
         System.out.println("password stored: "+user.getPassword());
         String passwordEncrypted = this.encrypt(password);
         System.out.println("password encrypted: "+passwordEncrypted);
