@@ -10,25 +10,27 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString(exclude = "order")
+@EqualsAndHashCode(exclude = "order")
 @Entity
-@Table(name = "products")
-public class Products {
+@Table(name = "order_item")
+public class OrderItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
 
-    @Column(unique = true)
-    private Integer productID;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", nullable = false)
+    private Order order;
 
-    @Column(nullable = false)
-    private String name;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", nullable = false)
+    private Products product;
 
     @Column(nullable = false)
     private Integer quantity;
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
-
-    private String description;
 }

@@ -4,11 +4,15 @@ import com.prakhar.ecomm.ecommbackend.entity.Products;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
+@Repository
 public interface ProductRepository extends JpaRepository<Products, Integer> {
 
-    @Query("SELECT u FROM Products u WHERE u.productID= :productID")
-    public Products getProductByProductID(@Param("productID") int productID) ;
+    @Query("SELECT p FROM Products p WHERE p.productID = :productID")
+    Optional<Products> getProductByProductID(@Param("productID") int productID);
 
-    public Products findByProductID(int productId);
+    Optional<Products> findByProductID(int productId);
 }

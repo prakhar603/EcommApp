@@ -1,52 +1,80 @@
 package com.prakhar.ecomm.ecommbackend.service.impl;
 
+import com.prakhar.ecomm.ecommbackend.dto.RegisterRequest;
+import com.prakhar.ecomm.ecommbackend.dto.UserResponse;
+import com.prakhar.ecomm.ecommbackend.entity.Cart;
 import com.prakhar.ecomm.ecommbackend.entity.Users;
+import com.prakhar.ecomm.ecommbackend.exception.BadRequestException;
+import com.prakhar.ecomm.ecommbackend.exception.ResourceNotFoundException;
 import com.prakhar.ecomm.ecommbackend.repository.UserRepository;
 import com.prakhar.ecomm.ecommbackend.service.IUserService;
-import com.prakhar.ecomm.ecommbackend.utils.JwtUtils;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Base64;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class UserServiceImpl implements IUserService {
+@Transactional
+public class UserServiceImpl implements IUserService, UserDetailsService {
 
-    @Autowired
-    UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    JwtUtils jwtUtils;
-
-    @Override
-    public Users createUser(Users user){
-        this.isEmailUnique(user.getEmail());
-        user.setPassword(this.encrypt(user.getPassword()));
-        return userRepository.save(user);
-    }
-
-    private String encrypt(String str){
-        return new String(Base64.getEncoder().encode(str.getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
-    }
-
-    public void isEmailUnique(String email) {
-        Users userByEmail = userRepository.findByEmail(email) ;
-        if (userByEmail!=null){
-            throw new RuntimeException("email id not unique.");
-        }
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
-    public String login(String username, String password) throws Exception {
-        Users user = this.userRepository.findByEmail(username);
-        System.out.println("password stored: "+user.getPassword());
-        String passwordEncrypted = this.encrypt(password);
-        System.out.println("password encrypted: "+passwordEncrypted);
-        if (passwordEncrypted.equals(user.getPassword())){
-            return jwtUtils.generateJwtToken(username);
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        Users user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+        return User.builder()
+                .username(user.getEmail())
+                .password(user.getPassword())
+                .roles("USER")
+                .build();
+    }
+
+    @Override
+    public UserResponse registerUser(RegisterRequest request) {
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new BadRequestException("Email already registered: " + request.getEmail());
         }
-        throw new Exception("Username and password do not match");
+
+        Cart cart = new Cart();
+        Users user = Users.builder()
+                .email(request.getEmail())
+                .firstName(request.getFirstName())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .age(request.getAge())
+                .gender(request.getGender())
+                .build();
+        cart.setUser(user);
+        user.setCart(cart);
+
+        Users saved = userRepository.save(user);
+        return toResponse(saved);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserResponse getUserProfile(String email) {
+        Users user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + email));
+        return toResponse(user);
+    }
+
+    private UserResponse toResponse(Users user) {
+        return UserResponse.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .age(user.getAge())
+                .gender(user.getGender())
+                .build();
     }
 }

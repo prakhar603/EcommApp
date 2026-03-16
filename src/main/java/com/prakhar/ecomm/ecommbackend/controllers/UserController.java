@@ -1,30 +1,36 @@
 package com.prakhar.ecomm.ecommbackend.controllers;
 
-import com.prakhar.ecomm.ecommbackend.entity.Users;
-import com.prakhar.ecomm.ecommbackend.models.LoginRequest;
+import com.prakhar.ecomm.ecommbackend.dto.RegisterRequest;
+import com.prakhar.ecomm.ecommbackend.dto.UserResponse;
 import com.prakhar.ecomm.ecommbackend.service.IUserService;
-import com.prakhar.ecomm.ecommbackend.service.impl.UserServiceImpl;
-import lombok.NonNull;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.repository.query.Param;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.validation.Valid;
+import java.security.Principal;
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/users")
 public class UserController {
 
-    @Autowired
-    IUserService userService;
+    private final IUserService userService;
 
-    @PostMapping("/create-user")
-    public Users createUser(@RequestBody @NonNull Users user) {
-        return userService.createUser(user);
+    public UserController(IUserService userService) {
+        this.userService = userService;
     }
 
-    @GetMapping("/login")
-    public String login(@RequestBody @NonNull LoginRequest request) throws Exception {
-        return this.userService.login(request.getUsername(), request.getPassword());
+    @PostMapping("/register")
+    public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
+        return new ResponseEntity<>(userService.registerUser(request), HttpStatus.CREATED);
     }
 
-
+    @GetMapping("/profile")
+    public ResponseEntity<UserResponse> getProfile(Principal principal) {
+        return ResponseEntity.ok(userService.getUserProfile(principal.getName()));
+    }
 }
